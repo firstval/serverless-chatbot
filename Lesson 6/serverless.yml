@@ -1,16 +1,3 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
-
 service: serverless-chatbot
 
 provider:
@@ -19,16 +6,16 @@ provider:
   profile: serverless-chatbot
   stage: dev
   iamRoleStatements:
-    - Effect: Allow
+    - Effect: "Allow"
       Action:
         - rekognition:DetectFaces
       Resource: '*'
-    - Effect: Allow
+    - Effect: "Allow"
       Action:
         - s3:GetObject
         - s3:PutObject
       Resource: arn:aws:s3:::${self:custom.uploadBucket}/*
-    - Effect: Allow
+    - Effect: "Allow"
       Action:
         - s3:GetObject
         - s3:PutObject
@@ -39,9 +26,11 @@ provider:
         - dynamodb:PutItem
       Resource:
         - arn:aws:dynamodb:*:*:table/${self:service}-${self:provider.stage}-teams
+
 custom:
-  uploadBucket: ${self:service}-${self:provider.stage}-uploads-your-initials-here
-  transformBucket: ${self:service}-${self:provider.stage}-transformed-your-initials-here
+  uploadBucket: ${self:service}-${self:provider.stage}-uploads-myinitials2017-morerandom
+  transformBucket: ${self:service}-${self:provider.stage}-transformed-myinitials2017-morerandom
+
 functions:
   install:
     handler: install.endpoint
@@ -50,8 +39,8 @@ functions:
           path: install
           method: get
     environment:
-      CLIENT_ID: '159801495122.160508499655'
-      CLIENT_SECRET: b3f939ef9af2a6c5cc848001f6bac147
+      CLIENT_ID: 'ReplaceThisWithYourSlackClientIDFromBasicInfoTab'
+      CLIENT_SECRET: 'ReplaceThisWithYourSlackClientSecretFromBasicInfoTab'
       SLACK_OAUTH: 'https://slack.com/api/oauth.access?'
       TABLE_NAME: ${self:service}-${self:provider.stage}-teams
   hello:
@@ -62,6 +51,8 @@ functions:
           method: post
     environment:
       POST_MESSAGE_URL: 'https://slack.com/api/chat.postMessage?'
+      BOT_ID: 'ReplaceThisWithTheIdFromYourCommandLineRunOfTheBotFunction'
+      VERIFICATION_TOKEN: 'ReplaceThisWithYourVerificationTokenFromBasicInfoInSlackAppsConfig'
       UPLOAD_BUCKET: ${self:custom.uploadBucket}
       SLACK_HOSTNAME: 'files.slack.com'
       TEMP_FOLDER: '/tmp/'
@@ -81,21 +72,23 @@ functions:
     handler: slackupdate.execute
     environment:
       POST_MESSAGE_URL: 'https://slack.com/api/chat.postMessage?'
-      BOT_ACCESS_TOKEN: 'xoxb-159279836768-FOst5DLfEzmQgkz7cte5qiIv'
-      CHANNEL_ID: 'C4QE6KLFQ'
-      SHORTENER_API_KEY: 'AIzaSyDO-Y0w0hllv097NGrSUrDoy4Un35jLoSA'
+      BOT_ACCESS_TOKEN: 'ReplaceThisWithYourBotUserOAuthAccessToken'
+      CHANNEL_ID: 'ReplaceThisWithTheChannelPortionOfAMessageLink'
+      SHORTENER_API_KEY: 'ReplaceThisWithYourGoogleAPIKey'
       SHORTENER_API_URL: 'https://www.googleapis.com/urlshortener/v1/url?'
+
     events:
       - s3:
           bucket: ${self:custom.transformBucket}
           event: s3:ObjectCreated:*
+
 resources:
   Resources:
     TeamsDynamoDbTable:
       Type: AWS::DynamoDB::Table
-      Properties: 
+      Properties:
         TableName: ${self:service}-${self:provider.stage}-teams
-        AttributeDefinitions: 
+        AttributeDefinitions:
           - AttributeName: team_id
             AttributeType: S
         KeySchema:

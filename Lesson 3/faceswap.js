@@ -1,7 +1,6 @@
-'use strict';
+'use strict';
 
-module.exports.execute = (event, context, callback) => {
-  console.log(event);
-
-  callback(null);
+module.exports.execute = (event, context, callback) => {
+    console.log(event);
+    callback(null);
 };

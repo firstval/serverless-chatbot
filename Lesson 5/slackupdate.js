@@ -1,39 +1,29 @@
 'use strict';
 
+const request = require('request');
 const aws = require('aws-sdk');
 const https = require('https');
 const qs = require('querystring');
-const request = require('request');
 const s3 = new aws.S3();
 
-const getSignedUrl = function (bucket, key) {
-    console.log('Getting signed url for bucket');
-
+const getSignedUrl = function(bucket, key) {
     return new Promise((resolve, reject) => {
-        const params = {
-            Bucket: bucket,
-            Key: key,
-            Expires: 604800
-        };
+        const params = {Bucket: bucket, Key: key, Expires: 604800};
         const url = s3.getSignedUrl('getObject', params);
         resolve(url);
     });
 };
 
-const getShortUrl = function (url) {
-    console.log('Getting short url');
-
+const getShortUrl = function(url) {
     return new Promise((resolve, reject) => {
         const req = {
-            uri: process.env.SHORTENER_API_URL + qs.stringify({
-                key: process.env.SHORTENER_API_KEY
-            }),
+            uri: process.env.SHORTENER_API_URL + qs.stringify({key: process.env.SHORTENER_API_KEY}),
             method: 'POST',
             json: true,
             body: {
                 longUrl: url
             }
-        }
+        };
 
         request(req, (err, res, body) => {
             if (err && res.statusCode !== 200) {
@@ -43,26 +33,24 @@ const getShortUrl = function (url) {
             }
         });
     });
-}
+};
 
-const writeToSlack = function (url) {
-    console.log('Posting image back to slack');
-
+const writeToSlack = function(url) {
     return new Promise((resolve, reject) => {
-        const slackParams = {
+        const response = {
             token: process.env.BOT_ACCESS_TOKEN,
             channel: process.env.CHANNEL_ID,
             text: url
-        }
+        };
 
-        const slackurl = process.env.POST_MESSAGE_URL + qs.stringify(slackParams);
+        const slackurl = process.env.POST_MESSAGE_URL + qs.stringify(response);
 
         https.get(slackurl, (res) => {
             const statusCode = res.statusCode;
             resolve();
-        })
+        });
     });
-}
+};
 
 module.exports.execute = (event, context, callback) => {
     const bucket = event.Records[0].s3.bucket.name;
@@ -71,12 +59,6 @@ module.exports.execute = (event, context, callback) => {
     getSignedUrl(bucket, key)
         .then((url) => getShortUrl(url))
         .then((url) => writeToSlack(url))
-        .then(() => {
-            console.log('Finished processing image');
-            callback(null);
-        })
-        .catch((err) => {
-            console.log(err);
-            callback(err);
-        });
+        .then(() => callback(null))
+        .catch((err) => callback(err));
 };
